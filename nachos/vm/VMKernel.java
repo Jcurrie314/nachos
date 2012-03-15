@@ -31,6 +31,7 @@ public class VMKernel extends UserKernel {
 	//this is a comment
 	//this is another comment
 	//and another useless comment
+	//yet another comment
     }
 
     /**
