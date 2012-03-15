@@ -29,6 +29,7 @@ public class VMKernel extends UserKernel {
     public void selfTest() {
 	super.selfTest();
 	//this is a comment
+	//this is another comment
     }
 
     /**
