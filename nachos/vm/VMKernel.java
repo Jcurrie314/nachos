@@ -24,10 +24,11 @@ public class VMKernel extends UserKernel {
     }
 
     /**
-     * Test this kernel.
+     * Test this kernel. 
      */	
     public void selfTest() {
 	super.selfTest();
+	//this is a comment
     }
 
     /**
