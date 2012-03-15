@@ -6,14 +6,20 @@ EMAIL = wh1pch81n@gmail.com
 REPOSITORY=nachos
 COMMENT = add comments here
 
+
 add:
 	git add ./*
+
 commit:
 	git commit -m '$(COMMENT)'
+
 push:
 	git push -u origin master
-pull:
+
+pull:#this command will pull and merge
 	git pull
+all:
+	make add commit push
 
 #below commands used for set up.  Should only do this once
 configname:
