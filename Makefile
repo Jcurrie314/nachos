@@ -1,17 +1,20 @@
 # the purpose of this make file is to make
-# pushing and pulling easier
+# pushing and pulling easier on when using git hub
 NAME =Derrick Ho
 USERNAME =wh1pch81n
 EMAIL = wh1pch81n@gmail.com
 REPOSITORY=nachos
-COMMENT = add comments here
+COMMENT = Derrick Ho
 
 
 add:
-	git add ./*
+	git add ./$(REPOSITORY)
 
 commit:
-	git commit -m '$(COMMENT)'
+	clear;clear;
+	echo "==Please enter your COMMENT. finish by hitting ENTER==";\
+	read dCOM;\
+	git commit -m "$$dCOM  --$(NAME)"
 
 push:
 	git push -u origin master
