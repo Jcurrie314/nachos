@@ -49,7 +49,23 @@ public class VMKernel extends UserKernel {
 	public void terminate() {
 		super.terminate();
 	}
-
+	
+	/*Uses the simpliest replacement policy FIFO
+	 * to decide what to evict next from the TLB.
+	 * 
+	 * return an index of the tlb that may be overwritten by
+	 * 		  machine.process().writeTLBentry( i, t );
+	 * */
+	private int replacementPolicy(){	
+		TranslationEntry emptyT = new TranslationEntry(0, 0, true, false, false, false);
+		//pick a tlb entry to evict and replace it with a new TranslationEntry();
+		Machine.processor().writeTLBEntry(evictionIndex, emptyT);
+		int TranslationEntryYouMayOverWrite= evictionIndex;//
+		evictionIndex = (evictionIndex + 1)% (Machine.processor().getTLBSize());
+		
+		return TranslationEntryYouMayOverWrite;
+	}
+	
 	private void syncTLB(boolean contextSwitch) {
 		// iterate through the entire tlb and start syncing
 		for (int i = 0; i < Machine.processor().getTLBSize(); i++) {
@@ -99,7 +115,7 @@ public class VMKernel extends UserKernel {
 		private LinkedList<Integer> unusedFileSpace = new LinkedList<Integer>();
 
 		public SwapFile(String filename) {
-			// swapf = FileSystem.open(filename, true);
+			 swapf = ThreadedKernel.fileSystem.open(filename, true);
 
 		}
 
@@ -126,4 +142,5 @@ public class VMKernel extends UserKernel {
 
 	public static pageFrame[] coreMap = null;
 	private static final char dbgVM = 'v';
+	private static int evictionIndex =0;
 }

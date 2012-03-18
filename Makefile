@@ -1,25 +1,28 @@
 # the purpose of this make file is to make
-# pushing and pulling easier
+# pushing and pulling easier on when using git hub
+#  
+# NOTE: placeing "@" in front of command will stop console echoing
+##################
 NAME =Derrick Ho
 USERNAME =wh1pch81n
 EMAIL = wh1pch81n@gmail.com
 REPOSITORY=nachos
-COMMENT = add comments here
-
 
 add:
-	git add ./*
+	@git add ./$(REPOSITORY)
 
 commit:
-	git commit -m '$(COMMENT)'
+	@echo "==Please enter your COMMENT. finish by hitting ENTER==";\
+	read dCOM;\
+	git commit -m "$$dCOM  --$(NAME)"
 
 push:
-	git push -u origin master
+	@git push -u origin master
 
 pull:#this command will pull and merge
-	git pull
+	@git pull
 all:
-	make add commit push
+	@make add commit push
 
 #below commands used for set up.  Should only do this once
 configname:

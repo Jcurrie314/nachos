@@ -15,12 +15,12 @@ public class VMProcess extends UserProcess {
 	public VMProcess() {
 		super();
 		if (kernel == null) {
-			kernel = (VMKernel)ThreadedKernel.kernel;
-			if(kernel== null)//if it still is null we have a problem
+			kernel = (VMKernel) ThreadedKernel.kernel;
+			if (kernel == null)// if it still is null we have a problem
 			{
-				//Deal with problem some how.
-				//If this failes does it mean there was no more
-				//space for it?
+				// Deal with problem some how.
+				// If this failes does it mean there was no more
+				// space for it?
 				System.out.println("VM kernel allocation failed");
 			}
 		}
@@ -82,6 +82,11 @@ public class VMProcess extends UserProcess {
 		switch (cause) {
 		case Processor.exceptionTLBMiss:
 			handleTLBMiss(Processor.readRegister(Processor.regBadVaddr));
+			
+			//todo:
+			//if it wasn't in swap file, then load it
+			//You may need to allocate a new page
+			
 			break;
 		default:
 			super.handleException(cause);
