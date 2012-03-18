@@ -81,7 +81,8 @@ public class VMProcess extends UserProcess {
 
 		switch (cause) {
 		case Processor.exceptionTLBMiss:
-			handleTLBMiss(Processor.readRegister(Processor.regBadVaddr));
+			
+			handleTLBMiss(Machine.processor().readRegister(Processor.regBadVAddr));
 			
 			//todo:
 			//if it wasn't in swap file, then load it
