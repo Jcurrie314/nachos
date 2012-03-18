@@ -5,7 +5,7 @@ import nachos.threads.*;
 import nachos.userprog.*;
 import nachos.vm.*;
 import java.util.*;
-
+//i made a change
 /**
  * A kernel that can support multiple demand-paging user processes.
  */
@@ -92,7 +92,7 @@ public class VMKernel extends UserKernel {
 		private boolean unpinned;
 	}
 
-	// Make a swapFile class to make it easier to create a swapFile and accessit
+	// Make a swapFile class to make it easier to create a swapFile and access it
 	private class SwapFile {
 		private OpenFile swapf = null;
 		private LinkedList<Integer> PageTableIDs = new LinkedList<Integer>();

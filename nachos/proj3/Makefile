@@ -1,3 +1,3 @@
-DIRS = vm userprog threads machine security ag
+DIRS = vm machine security ag
 
 include ../Makefile

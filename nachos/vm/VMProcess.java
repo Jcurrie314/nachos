@@ -59,6 +59,15 @@ public class VMProcess extends UserProcess {
 		super.unloadSections();
 	}
 
+	void handleTLBMiss( int vaddr )
+	{
+		//need a kernel lock here
+		
+		
+		//need a kernel release here
+	}
+		
+
 	/**
 	 * Handle a user exception. Called by <tt>UserKernel.exceptionHandler()</tt>
 	 * . The <i>cause</i> argument identifies which exception occurred; see the
@@ -71,10 +80,13 @@ public class VMProcess extends UserProcess {
 		Processor processor = Machine.processor();
 
 		switch (cause) {
+		case Processor.exceptionTLBMiss:
+			handleTLBMiss(Processor.readRegister(Processor.regBadVaddr));
+			break;
 		default:
 			super.handleException(cause);
 			break;
-		}
+		}	
 	}
 
 	private static VMKernel kernel = null;
