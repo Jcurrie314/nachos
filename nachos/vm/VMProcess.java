@@ -32,6 +32,9 @@ public class VMProcess extends UserProcess {
 	 */
 	public void saveState() {
 		super.saveState();
+		// run syncTLB() when you saveState
+		VMKernel.syncTLB(true);
+
 	}
 
 	/**
@@ -59,14 +62,11 @@ public class VMProcess extends UserProcess {
 		super.unloadSections();
 	}
 
-	void handleTLBMiss( int vaddr )
-	{
-		//need a kernel lock here
-		
-		
-		//need a kernel release here
+	void handleTLBMiss(int vaddr) {
+		// need a kernel lock here
+
+		// need a kernel release here
 	}
-		
 
 	/**
 	 * Handle a user exception. Called by <tt>UserKernel.exceptionHandler()</tt>
@@ -81,18 +81,19 @@ public class VMProcess extends UserProcess {
 
 		switch (cause) {
 		case Processor.exceptionTLBMiss:
-			
-			handleTLBMiss(Machine.processor().readRegister(Processor.regBadVAddr));
-			
-			//todo:
-			//if it wasn't in swap file, then load it
-			//You may need to allocate a new page
-			
+
+			handleTLBMiss(Machine.processor().readRegister(
+					Processor.regBadVAddr));
+
+			// todo:
+			// if it wasn't in swap file, then load it
+			// You may need to allocate a new page
+
 			break;
 		default:
 			super.handleException(cause);
 			break;
-		}	
+		}
 	}
 
 	private static VMKernel kernel = null;

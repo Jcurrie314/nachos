@@ -5,6 +5,7 @@ import nachos.threads.*;
 import nachos.userprog.*;
 import nachos.vm.*;
 import java.util.*;
+
 //i made a change
 /**
  * A kernel that can support multiple demand-paging user processes.
@@ -49,24 +50,28 @@ public class VMKernel extends UserKernel {
 	public void terminate() {
 		super.terminate();
 	}
-	
-	/*Uses the simpliest replacement policy FIFO
-	 * to decide what to evict next from the TLB.
+
+	/*
+	 * Uses the simpliest replacement policy FIFO to decide what to evict next
+	 * from the TLB.
 	 * 
 	 * return an index of the tlb that may be overwritten by
-	 * 		  machine.process().writeTLBentry( i, t );
-	 * */
-	private int replacementPolicy(){	
-		TranslationEntry emptyT = new TranslationEntry(0, 0, true, false, false, false);
-		//pick a tlb entry to evict and replace it with a new TranslationEntry();
+	 * machine.process().writeTLBentry( i, t );
+	 */
+	private int replacementPolicy() {
+		TranslationEntry emptyT = new TranslationEntry(0, 0, true, false,
+				false, false);
+		// pick a tlb entry to evict and replace it with a new
+		// TranslationEntry();
 		Machine.processor().writeTLBEntry(evictionIndex, emptyT);
-		int TranslationEntryYouMayOverWrite= evictionIndex;//
-		evictionIndex = (evictionIndex + 1)% (Machine.processor().getTLBSize());
-		
+		int TranslationEntryYouMayOverWrite = evictionIndex;//
+		evictionIndex = (evictionIndex + 1)
+				% (Machine.processor().getTLBSize());
+
 		return TranslationEntryYouMayOverWrite;
 	}
-	
-	private void syncTLB(boolean contextSwitch) {
+
+	public static void syncTLB(boolean contextSwitch) {
 		// iterate through the entire tlb and start syncing
 		for (int i = 0; i < Machine.processor().getTLBSize(); i++) {
 			// get the TableEntry stored at the ith tlb location
@@ -101,21 +106,28 @@ public class VMKernel extends UserKernel {
 		}
 	}
 
-	public class pageFrame {
-		private VMProcess process;
-		private TranslationEntry te;
-		private int pinned;
-		private boolean unpinned;
+	// public class pageFrame {
+	// private VMProcess process;
+	// private TranslationEntry te;
+	// private int pinned;
+	// private boolean unpinned;
+	// }
+	private static class pageFrame {
+		private VMProcess process; // valid if entry.valid
+		private TranslationEntry te = new TranslationEntry();
+		private int pinCount; // valid if entry.valid
+		private boolean freeWhenUnpinned; // valid if pinned
 	}
 
-	// Make a swapFile class to make it easier to create a swapFile and access it
+	// Make a swapFile class to make it easier to create a swapFile and access
+	// it
 	private class SwapFile {
 		private OpenFile swapf = null;
 		private LinkedList<Integer> PageTableIDs = new LinkedList<Integer>();
 		private LinkedList<Integer> unusedFileSpace = new LinkedList<Integer>();
 
 		public SwapFile(String filename) {
-			 swapf = ThreadedKernel.fileSystem.open(filename, true);
+			swapf = ThreadedKernel.fileSystem.open(filename, true);
 
 		}
 
@@ -142,5 +154,5 @@ public class VMKernel extends UserKernel {
 
 	public static pageFrame[] coreMap = null;
 	private static final char dbgVM = 'v';
-	private static int evictionIndex =0;
+	private static int evictionIndex = 0;
 }
