@@ -115,7 +115,7 @@ public class VMKernel extends UserKernel {
 		private LinkedList<Integer> unusedFileSpace = new LinkedList<Integer>();
 
 		public SwapFile(String filename) {
-			// swapf = FileSystem.open(filename, true);
+			 swapf = ThreadedKernel.fileSystem.open(filename, true);
 
 		}
 
