@@ -71,6 +71,24 @@ public class VMKernel extends UserKernel {
 		return TranslationEntryYouMayOverWrite;
 	}
 
+	/*
+	 * return a Translation entry from the core map based on the ppn
+	 */
+	public static TranslationEntry getTranslation(int ppn) {
+		return coreMap[ppn].te;
+	}
+
+	/* Translate a vpn to a ppn */
+	public static int translatePage(VMProcess process, int vpn) {
+		Lib.assertTrue(memoryLock.isHeldByCurrentThread());
+
+		// find PageFrame that matches process and vpn
+		// if found, return ppn
+		// else, fetch page
+
+		return 0;// temporarily return 0 until this is implemented
+	}
+
 	public static void syncTLB(boolean contextSwitch) {
 		// iterate through the entire tlb and start syncing
 		for (int i = 0; i < Machine.processor().getTLBSize(); i++) {
