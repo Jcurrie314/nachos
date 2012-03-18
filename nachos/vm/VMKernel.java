@@ -115,7 +115,7 @@ public class VMKernel extends UserKernel {
 	private static class pageFrame {
 		private VMProcess process; // valid if entry.valid
 		private TranslationEntry te = new TranslationEntry();
-		private int pinCount; // valid if entry.valid
+		private int pinCount; // valid if te.valid
 		private boolean freeWhenUnpinned; // valid if pinned
 	}
 
