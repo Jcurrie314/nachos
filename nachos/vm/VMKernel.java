@@ -45,7 +45,7 @@ public class VMKernel extends UserKernel {
 	 * Start running user programs.
 	 */
 	public void run() {
-		super.run();
+		//super.run();
 	}
 
 	/**

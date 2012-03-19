@@ -31,7 +31,7 @@ public class VMProcess extends UserProcess {
 	 * Called by <tt>UThread.saveState()</tt>.
 	 */
 	public void saveState() {
-		super.saveState();
+		//super.saveState();
 		VMKernel.syncTLB(true);
 
 	}
@@ -120,7 +120,7 @@ public class VMProcess extends UserProcess {
 		{
 			TranslationEntry TLBEntry = 
 					Machine.processor().readTLBEntry(i);
-			if( TLBEntry == null ) 
+			if( TLBEntry.valid == false ) 
 				{
 					TLBIndex = i;
 					entry = TLBEntry;
@@ -131,24 +131,13 @@ public class VMProcess extends UserProcess {
 		//This might be bad cause the valid bit might make a difference here
 		//if valid is false can we still evict it from tlb?
 				
-		if(entry != null)
-		{
+		if( entry != null)
 			Machine.processor().writeTLBEntry(VMKernel.replacementPolicy(), entry);
-		}
-		
-		entry.dirty = true;
-		entry.used = true;
-		//	coreMap[entry.ppn] = entry;
-		
-		TranslationEntry coreEntry = VMKernel.coreMap[ppn].te;
-		coreEntry.dirty = false;
-		coreEntry.used = false;
-		
-		Machine.processor().writeTLBEntry( TLBIndex, coreEntry );
-		
-		//create new TranslationEntry using ppn
-		//TLBEntry = translationentry from above
-		//set TLBEntry's dirty/used to false
+			
+		entry.dirty = false;
+		entry.used = false;
+				
+		else Machine.processor().writeTLBEntry( TLBIndex, entry );
 		
 		//write this new random entry into the tlb
 		
@@ -192,13 +181,7 @@ public class VMProcess extends UserProcess {
 
 		switch (cause) {
 		case Processor.exceptionTLBMiss:
-
 			handleTLBMiss(Machine.processor().readRegister(Processor.regBadVAddr));
-
-			// todo:
-			// if it wasn't in swap file, then load it
-			// You may need to allocate a new page
-
 			break;
 		default:
 			super.handleException(cause);
