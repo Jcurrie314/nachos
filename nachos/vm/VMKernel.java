@@ -6,7 +6,6 @@ import nachos.userprog.*;
 import nachos.vm.*;
 import java.util.*;
 
-//i made a change
 /**
  * A kernel that can support multiple demand-paging user processes.
  */
@@ -58,7 +57,7 @@ public class VMKernel extends UserKernel {
 	 * return an index of the tlb that may be overwritten by
 	 * machine.process().writeTLBentry( i, t );
 	 */
-	private int replacementPolicy() {
+	public static int replacementPolicy() {
 		TranslationEntry emptyT = new TranslationEntry(0, 0, true, false,
 				false, false);
 		// pick a tlb entry to evict and replace it with a new
@@ -125,12 +124,18 @@ public class VMKernel extends UserKernel {
 			}
 		}
 	}
-	
+
+ /*Hints from DORIAN
+ =================
+ pages are pinned by read/writeVirtualMemory() functions. 
+ They are also pinned when fetching a new page (reading 
+ from COFF or swap)  or cleaning a page (writing to swap).
+ */
 	public static class pageFrame {
-		private VMProcess process; // valid if entry.valid
+		public VMProcess process; // valid if entry.valid
 		public TranslationEntry te = new TranslationEntry();
-		private int pinCount; // valid if te.valid
-		private boolean freeWhenUnpinned; // valid if pinned
+		public int pinCount; // valid if te.valid
+		public boolean freeWhenUnpinned; // valid if pinned
 	}
 
 	// Make a swapFile class to make it easier to create a swapFile and access
@@ -193,10 +198,10 @@ public class VMKernel extends UserKernel {
 		
 		public void extractPageFromFile( int vpn )
 		{
-			
-			
+			 
+			usedFileSpace.addLast(spn);
 		}
-	}
+		
 
 	public SwapFile swap = null;
 	public static Lock memoryLock = new Lock();

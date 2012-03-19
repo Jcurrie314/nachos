@@ -67,16 +67,18 @@ public class VMProcess extends UserProcess {
 	private Integer findValidPPN( int vpn )
 	{
 		//try to find the translation entry for this vpn in physical memory
-		for( int i = 0; i < Machine.processor().getNumPhysPages(); i++ )
-			if( VMKernel.coreMap[i].te.vpn == vpn ) return VMKernel.coreMap[i].te.ppn;
-		
+		for( int i = 0; i < Machine.processor().getNumPhysPages(); i++ ){
+			if(VMKernel.coreMap[i].te.vpn == vpn)
+				return VMKernel.coreMap[i].te.ppn;
+		}
+			//if(coreMap[i].vpn == false ) //don't quite understand why you wan to compare a vpn to a boolean
+			//	return coreMap[i].ppn;
+			
 		//if it isnt in physical memory you may have to find it in the swap file
 		//or coff file
 		
-		
 		//JUST RETURN -1 FOR NOW IF ENTRY ISNT IN MEMORY
 		return -1;
-		
 	}
 	
 
@@ -90,7 +92,6 @@ public class VMProcess extends UserProcess {
 		TranslationEntry entry = null;
 		Integer TLBIndex = 0;
 		//try to find an open TLB entry
-		//Processor.getTLBSize()
 	
 		for( int i = 0; i < Machine.processor().getTLBSize(); i++ )
 		{
@@ -101,8 +102,7 @@ public class VMProcess extends UserProcess {
 					TLBIndex = i;
 					entry = TLBEntry;
 				}
-		}
-		
+	/*	
 		//if the there is no free tlb then remove a random tlb entry
 		//This might be bad cause the valid bit might make a difference here
 		//if valid is false can we still evict it from tlb?
@@ -112,6 +112,12 @@ public class VMProcess extends UserProcess {
 				//entry = Processor.TLBEntry(rand);
 				TLBIndex = 2;
 	    }
+		*/
+		
+		if(entry != null)
+		{
+			Machine.processor().writeTLBEntry(VMKernel.replacementPolicy(), entry);
+		}
 		
 		entry.dirty = true;
 		entry.used = true;
@@ -136,6 +142,26 @@ public class VMProcess extends UserProcess {
 		
 		
 		VMKernel.memoryLock.release();
+		
+		/*hints from Dorian
+		 =================
+		 If you are implementing handleTLBMiss, after you 
+		 choose which TLB entry you will replace, you will 
+		 copy the information from the TranslationEntry of 
+		 the memory page you are going to store in the TLB, 
+		 set the dirty/used bits to false, and then write this 
+		 to the TLB. 
+		 
+		 here is representative code of what should be going on:
+		 
+		 TranslationEntry coreEntry = coremap[ppn].entry;
+		 tlbEntry = new TranslationEntry(coreEntry);
+		 tlbEntry.used = false;
+		 tlbEntry.dirty = false;
+		 Machine.processor().writeTLBEntry(i, tlbEntry);
+		 
+		 Here, 'i' is the index of the TLB entry you are replacing.
+		 */
 	}
 
 	/**
