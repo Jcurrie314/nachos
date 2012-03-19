@@ -124,12 +124,12 @@ public class VMKernel extends UserKernel {
 		}
 	}
 
-	// public class pageFrame {
-	// private VMProcess process;
-	// private TranslationEntry te;
-	// private int pinned;
-	// private boolean unpinned;
-	// }
+/*Hints from DORIAN
+ =================
+ pages are pinned by read/writeVirtualMemory() functions. 
+ They are also pinned when fetching a new page (reading 
+ from COFF or swap)  or cleaning a page (writing to swap).
+ */
 	private static class pageFrame {
 		private VMProcess process; // valid if entry.valid
 		private TranslationEntry te = new TranslationEntry();

@@ -66,6 +66,26 @@ public class VMProcess extends UserProcess {
 		// need a kernel lock here
 
 		// need a kernel release here
+		
+		/*hints from Dorian
+		 =================
+		 If you are implementing handleTLBMiss, after you 
+		 choose which TLB entry you will replace, you will 
+		 copy the information from the TranslationEntry of 
+		 the memory page you are going to store in the TLB, 
+		 set the dirty/used bits to false, and then write this 
+		 to the TLB. 
+		 
+		 here is representative code of what should be going on:
+		 
+		 TranslationEntry coreEntry = coremap[ppn].entry;
+		 tlbEntry = new TranslationEntry(coreEntry);
+		 tlbEntry.used = false;
+		 tlbEntry.dirty = false;
+		 Machine.processor().writeTLBEntry(i, tlbEntry);
+		 
+		 Here, 'i' is the index of the TLB entry you are replacing.
+		 */
 	}
 
 	/**
