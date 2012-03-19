@@ -68,26 +68,39 @@ public class VMProcess extends UserProcess {
 	{
 		//try to find the translation entry for this vpn in physical memory
 		for( int i = 0; i < Machine.processor().getNumPhysPages(); i++ )
-			if( coreMap[i].vpn == false ) return coreMap[i].ppn;
+			if( VMKernel.coreMap[i].te.vpn == vpn ) return VMKernel.coreMap[i].te.ppn;
 		
 		//if it isnt in physical memory you may have to find it in the swap file
+		//or coff file
 		
+		
+		//JUST RETURN -1 FOR NOW IF ENTRY ISNT IN MEMORY
+		return -1;
 		
 	}
+	
 
 	void handleTLBMiss(int vaddr) {
-		// need a kernel lock here
+		VMKernel.memoryLock.acquire();
 		int vpn = Machine.processor().pageFromAddress(vaddr);
 		Lib.assertTrue( vpn >= 0 );
 		int ppn = findValidPPN( vpn ); //assume this function works for now
 		Lib.assertTrue( ppn != -1 );
 		
 		TranslationEntry entry = null;
+		Integer TLBIndex = 0;
 		//try to find an open TLB entry
-		for( int i = 0; i < Processor.getTLBEntry(); i++ )
+		//Processor.getTLBSize()
+	
+		for( int i = 0; i < Machine.processor().getTLBSize(); i++ )
 		{
-			TranslationEntry TLBEntry = Processor.readTLBEntry(i)
-			if( TLBEntry == null ) entry = TLBEntry;
+			TranslationEntry TLBEntry = 
+					Machine.processor().readTLBEntry(i);
+			if( TLBEntry == null ) 
+				{
+					TLBIndex = i;
+					entry = TLBEntry;
+				}
 		}
 		
 		//if the there is no free tlb then remove a random tlb entry
@@ -95,9 +108,22 @@ public class VMProcess extends UserProcess {
 		//if valid is false can we still evict it from tlb?
 		if( entry != null ) 
 	    {
-				Random rand = new Random( Processor.getTLBEntry() ); //might need a change
-				entry = Processor.TLBEntry(rand);
+				//Random rand = new Random( Processor.getTLBEntry() ); //might need a change
+				//entry = Processor.TLBEntry(rand);
+				TLBIndex = 2;
 	    }
+		
+		entry.dirty = true;
+		entry.used = true;
+		//	coreMap[entry.ppn] = entry;
+		
+		TranslationEntry coreEntry = VMKernel.coreMap[ppn].te;
+		coreEntry.dirty = false;
+		coreEntry.used = false;
+		//TranslationEntry newEntry = new TranslationEntry( vpn, ppn, coreEntry.valid, 
+		//							coreEntry.readOnly, false, false );
+		
+		Machine.processor().writeTLBEntry( TLBIndex, coreEntry );
 		
 		//create new TranslationEntry using ppn
 		//TLBEntry = translationentry from above
@@ -109,7 +135,7 @@ public class VMProcess extends UserProcess {
 		//WILL MAYBE NEED TO ASK DORIAN THIS
 		
 		
-		// need a kernel release here
+		VMKernel.memoryLock.release();
 	}
 
 	/**
