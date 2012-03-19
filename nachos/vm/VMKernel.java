@@ -6,7 +6,6 @@ import nachos.userprog.*;
 import nachos.vm.*;
 import java.util.*;
 
-//i made a change
 /**
  * A kernel that can support multiple demand-paging user processes.
  */
@@ -82,13 +81,8 @@ public class VMKernel extends UserKernel {
 	public static int translatePage(VMProcess process, int vpn) {
 		//Lib.assertTrue(memoryLock.isHeldByCurrentThread());
 
-		
-		
-		
-		
-		
-		
-		
+								
+			
 		// find PageFrame that matches process and vpn
 		// if found, return ppn
 		// else, fetch page
@@ -131,7 +125,7 @@ public class VMKernel extends UserKernel {
 		}
 	}
 
-/*Hints from DORIAN
+ /*Hints from DORIAN
  =================
  pages are pinned by read/writeVirtualMemory() functions. 
  They are also pinned when fetching a new page (reading 
@@ -146,15 +140,11 @@ public class VMKernel extends UserKernel {
 
 	// Make a swapFile class to make it easier to create a swapFile and access
 	// it
-	/*
-	 * Need to add a container that will store elements like an array but doesn't
-	 * need to work like a linked list
-	 */
 	private class SwapFile {
 		private OpenFile swapf = null;
-		private LinkedList<Integer> pageTableIDs = new LinkedList<Integer>();
+//		private LinkedList<Integer> pageTableIDs = new LinkedList<Integer>();
 		private LinkedList<Integer> unusedFileSpace = new LinkedList<Integer>();
-		private LinkedList<Integer> fileSpace = new LinkedList<Integer>();
+		private LinkedList<Integer> usedFileSpace = new LinkedList<Integer>();
 
 		public SwapFile(String filename) {
 			swapf = ThreadedKernel.fileSystem.open(filename, true);
@@ -164,11 +154,25 @@ public class VMKernel extends UserKernel {
 		// insert a page table into the swap file
 		// param @ ppn is the physical page number of the table entry you want
 		// to insert into the file
-		public void insertPageIntoFile(int ppn) {
+		//return the spn so we can set the vpn of the calling TE to spn
+		public Integer insertPageIntoFile(int ppn) {
 			int spn = 0;
-			if (unusedFileSpace != null)
+			
+			//if first element to placed in swap file add 0 to usedFilespace
+			if( unusedFileSpace == null && usedFileSpace == null )
+				usedFileSpace.addLast(spn);
+			
+			//if there is anything in unusedFileSpace we want that to be our spn
+			else if (unusedFileSpace != null)
 				spn = unusedFileSpace.pop(); 
-			else spn = fileSpace.getLast() + 1;
+			
+			//if unusedFilespace is empty we want the last element of the used file
+			//space and use that number +1, then put that number in the used list
+			else
+			{
+				spn = usedFileSpace.getLast() + 1;
+				usedFileSpace.addLast(spn);
+			}
 			
 			int ps = Machine.processor().pageSize;
 			
@@ -180,26 +184,27 @@ public class VMKernel extends UserKernel {
 			//bits told to write in were written in
 			Lib.assertTrue( numBits != -1 || numBits == ppn * ps );
 			
-			//save the physical page number in a list of fileSpaces
-
+			//set the vpn in the te for this to be equal to the spn
+			return spn;
 			
 			
 			
 			// if there is a failure here you might want to exit
 
 			//We might want to evict a page from coreMap here
-			 
-			pageTableIDs.push(spn);
+			
+			//PageTableIDs.push(spn);
 		}
 		
-	    public void extractPageFromFile( int vpn )
-	    {
-			
-			
-	    }
-	}
+		public void extractPageFromFile( int vpn )
+		{
+			 
+			usedFileSpace.addLast(spn);
+		}
+		
 
 	public SwapFile swap = null;
+	public static Lock memoryLock = new Lock();
 	
 	// dummy variables to make javac smarter
 	private static VMProcess dummy1 = null;
