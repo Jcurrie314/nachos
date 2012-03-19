@@ -14,16 +14,16 @@ public class VMProcess extends UserProcess {
 	 */
 	public VMProcess() {
 		super();
-		if (kernel == null) {
-			kernel = (VMKernel) ThreadedKernel.kernel;
-			if (kernel == null)// if it still is null we have a problem
-			{
-				// Deal with problem some how.
-				// If this failes does it mean there was no more
-				// space for it?
-				System.out.println("VM kernel allocation failed");
-			}
-		}
+//		if (kernel == null) {
+//			kernel = (VMKernel) ThreadedKernel.kernel;
+//			if (kernel == null)// if it still is null we have a problem
+//			{
+//				// Deal with problem some how.
+//				// If this failes does it mean there was no more
+//				// space for it?
+//				System.out.println("VM kernel allocation failed");
+//			}
+//		}
 	}
 
 	/**
@@ -32,7 +32,6 @@ public class VMProcess extends UserProcess {
 	 */
 	public void saveState() {
 		super.saveState();
-		// run syncTLB() when you saveState
 		VMKernel.syncTLB(true);
 
 	}
@@ -43,7 +42,7 @@ public class VMProcess extends UserProcess {
 	 */
 	public void restoreState() {
 		// super.restoreState();
-		VMKernel.syncTLB(false);
+		//VMKernel.syncTLB(false);
 	}
 
 	/**
@@ -53,8 +52,23 @@ public class VMProcess extends UserProcess {
 	 * @return <tt>true</tt> if successful.
 	 */
 	protected boolean loadSections() {
-		return true;
-		//return super.loadSections();
+		for(int i=0; i < pageTable.length; i++){
+			pageTable[i] = new TranslationEntry();
+		}
+		
+		for(int i=0; i < coff.getNumSections(); i++){
+			CoffSection section = coff.getSection(i);
+			for(int j=0; j < section.getLength(); j++){
+				//set pageTable bits
+				//get First VPN
+				int vpn = section.getFirstVPN + j;
+				pageTable[firstVPN].used = false;
+				pageTable[firstVPN].dirty = false;
+				pageTable[firstVPN].valid = false;
+				pageTable[firstVPN].readyOnly = section.readOnly;
+			}
+		}
+		return super.loadSections();
 	}
 
 	/**
@@ -91,6 +105,10 @@ public class VMProcess extends UserProcess {
 		int vpn = Machine.processor().pageFromAddress(vaddr);
 		Lib.assertTrue( vpn >= 0 );
 		int ppn = VMKernel.translatePage( this, vpn ); //assume this function works for now
+		//if vpn not in coremap we need to check if its in COFF or swap file
+		//if dirty bit in page table entry is false it must be in coff file
+		//if in coff we need to allocate page and load it from coff
+		//if it isnt in coff file it must be in swap file
 		Lib.assertTrue( ppn != -1 );
 		
 		TranslationEntry entry = null;
