@@ -27,6 +27,11 @@ public class VMKernel extends UserKernel {
 		coreMap = new pageFrame[numPhysPages];
 		for (int i = 0; i < numPhysPages; i++)
 			coreMap[i] = new pageFrame();
+		
+		//initialize swap file and memory lock
+		swap = new SwapFile( "nachos.swp" );
+		memoryLock = new Lock();
+		allMemPinned = new Condition(memoryLock);
 	}
 
 	/**
@@ -48,6 +53,7 @@ public class VMKernel extends UserKernel {
 	 */
 	public void terminate() {
 		super.terminate();
+		//delete swapfile here
 	}
 
 	/*
@@ -69,6 +75,68 @@ public class VMKernel extends UserKernel {
 
 		return TranslationEntryYouMayOverWrite;
 	}
+	
+	//clock to find page to evict from phys memory
+	//return the page to evict
+	private pageFrame pageToEvict() 
+	{
+		memoryLock.acquire();
+		Integer numPinned = 0;
+		Integer coreSize = Machine.processor().getNumPhysPages();
+		
+		//if all phys memory pages are pinned we must sleep the process (allMemPinned.sleep())
+		for( Integer i = 0; i < coreSize; i++ )
+			if( coreMap[i].pinCount != 0 ) numPinned++;
+		
+		if( numPinned == coreSize ) allMemPinned.sleep();
+				
+		//we must sync the TLB first before we start changing phys Mem
+		syncTLB(false);
+		
+		int coreIndex = 0;
+		boolean pageFound = false;
+		
+		while( pageFound == false )
+		{
+			coreIndex = ( coreIndex + 1 ) % coreSize;
+			pageFrame page = coreMap[coreIndex];
+			
+			//dont look at pinned pages
+			if( page.pinCount > 0 ) continue;
+				
+			//we want to evict an invalid entry or a page that doesn't have a process associated to it
+			if( page.te.valid == false || page.process == null)
+				pageFound = true;
+			
+			//cant use a page recently used so set its used value to false once we see it
+			if( page.te.used == true )	page.te.used = false;
+			
+			//else the clock has gone around the whole time coreMap and we just want to evict the current page
+			else pageFound = true;
+		}
+		
+		//we should pin this page now
+		pageFrame page = coreMap[coreIndex];
+		page.pinCount = 1;
+		page.freeWhenUnpinned = false;
+		
+		//now we have to tell the TLB that this entry should invalid
+		for( Integer i = 0;  i < Machine.processor().getTLBSize(); i++ )
+		{
+			TranslationEntry TLBEntry = Machine.processor().readTLBEntry(i);
+			if( TLBEntry.ppn == page.te.ppn )
+			{
+				TLBEntry.valid = false;
+				Machine.processor().writeTLBEntry( i, TLBEntry );
+				break;
+			}	
+		}
+			
+			Integer spn = swap.insertPageIntoFile( page.te.ppn );
+			
+			memoryLock.release();
+			return page;
+	}
 
 	/*
 	 * return a Translation entry from the core map based on the ppn
@@ -79,15 +147,25 @@ public class VMKernel extends UserKernel {
 
 	/* Translate a vpn to a ppn */
 	public static int translatePage(VMProcess process, int vpn) {
-		//Lib.assertTrue(memoryLock.isHeldByCurrentThread());
-
+		Lib.assertTrue(memoryLock.isHeldByCurrentThread());
+		//try to find the translation entry for this vpn in physical memory
+		for( int i = 0; i < Machine.processor().getNumPhysPages(); i++ ){
+			if(coreMap[i].te.vpn == vpn)
+				return coreMap[i].te.ppn;
+		}
+			
+		//if it isnt in physical memory you may have to find it in the swap file
+		//or coff file
+		
+		//JUST RETURN -1 FOR NOW IF ENTRY ISNT IN MEMORY
+		return -1;
 								
 			
 		// find PageFrame that matches process and vpn
 		// if found, return ppn
 		// else, fetch page
 
-		return 0;// temporarily return 0 until this is implemented
+	//	return 0;// temporarily return 0 until this is implemented
 	}
 
 	public static void syncTLB(boolean contextSwitch) {
@@ -155,9 +233,10 @@ public class VMKernel extends UserKernel {
 		// param @ ppn is the physical page number of the table entry you want
 		// to insert into the file
 		//return the spn so we can set the vpn of the calling TE to spn
-		public Integer insertPageIntoFile(int ppn) {
+		public Integer insertPageIntoFile( Integer ppn )
+		{
 			int spn = 0;
-			
+					
 			//if first element to placed in swap file add 0 to usedFilespace
 			if( unusedFileSpace == null && usedFileSpace == null )
 				usedFileSpace.addLast(spn);
@@ -196,15 +275,18 @@ public class VMKernel extends UserKernel {
 			//PageTableIDs.push(spn);
 		}
 		
+		//This Function is not nearly done
 		public void extractPageFromFile( int vpn )
 		{
 			 
-			usedFileSpace.addLast(spn);
+			usedFileSpace.addLast(vpn);
 		}
+	}
 		
 
 	public SwapFile swap = null;
-	public static Lock memoryLock = new Lock();
+	public static Lock memoryLock;// = new Lock();
+	public static Condition allMemPinned = null;
 	
 	// dummy variables to make javac smarter
 	private static VMProcess dummy1 = null;

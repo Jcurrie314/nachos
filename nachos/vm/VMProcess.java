@@ -64,6 +64,10 @@ public class VMProcess extends UserProcess {
 		super.unloadSections();
 	}
 	
+	
+	/*
+	 * This will be in VMKernel I guess
+	 
 	private Integer findValidPPN( int vpn )
 	{
 		//try to find the translation entry for this vpn in physical memory
@@ -80,13 +84,13 @@ public class VMProcess extends UserProcess {
 		//JUST RETURN -1 FOR NOW IF ENTRY ISNT IN MEMORY
 		return -1;
 	}
-	
+	*/
 
-	void handleTLBMiss(int vaddr) {
+	private void handleTLBMiss(int vaddr) {
 		VMKernel.memoryLock.acquire();
 		int vpn = Machine.processor().pageFromAddress(vaddr);
 		Lib.assertTrue( vpn >= 0 );
-		int ppn = findValidPPN( vpn ); //assume this function works for now
+		int ppn = VMKernel.translatePage( this, vpn ); //assume this function works for now
 		Lib.assertTrue( ppn != -1 );
 		
 		TranslationEntry entry = null;
@@ -102,18 +106,12 @@ public class VMProcess extends UserProcess {
 					TLBIndex = i;
 					entry = TLBEntry;
 				}
-	/*	
+		}
+		
 		//if the there is no free tlb then remove a random tlb entry
 		//This might be bad cause the valid bit might make a difference here
 		//if valid is false can we still evict it from tlb?
-		if( entry != null ) 
-	    {
-				//Random rand = new Random( Processor.getTLBEntry() ); //might need a change
-				//entry = Processor.TLBEntry(rand);
-				TLBIndex = 2;
-	    }
-		*/
-		
+				
 		if(entry != null)
 		{
 			Machine.processor().writeTLBEntry(VMKernel.replacementPolicy(), entry);
@@ -126,8 +124,6 @@ public class VMProcess extends UserProcess {
 		TranslationEntry coreEntry = VMKernel.coreMap[ppn].te;
 		coreEntry.dirty = false;
 		coreEntry.used = false;
-		//TranslationEntry newEntry = new TranslationEntry( vpn, ppn, coreEntry.valid, 
-		//							coreEntry.readOnly, false, false );
 		
 		Machine.processor().writeTLBEntry( TLBIndex, coreEntry );
 		
@@ -190,7 +186,7 @@ public class VMProcess extends UserProcess {
 			break;
 		}
 	}
-
+	
 	private static VMKernel kernel = null;
 	private static final int pageSize = Processor.pageSize;
 	private static final char dbgProcess = 'a';
