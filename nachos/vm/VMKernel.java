@@ -58,7 +58,7 @@ public class VMKernel extends UserKernel {
 	 * return an index of the tlb that may be overwritten by
 	 * machine.process().writeTLBentry( i, t );
 	 */
-	private int replacementPolicy() {
+	public static int replacementPolicy() {
 		TranslationEntry emptyT = new TranslationEntry(0, 0, true, false,
 				false, false);
 		// pick a tlb entry to evict and replace it with a new
@@ -137,11 +137,11 @@ public class VMKernel extends UserKernel {
  They are also pinned when fetching a new page (reading 
  from COFF or swap)  or cleaning a page (writing to swap).
  */
-	private static class pageFrame {
-		private VMProcess process; // valid if entry.valid
-		private TranslationEntry te = new TranslationEntry();
-		private int pinCount; // valid if te.valid
-		private boolean freeWhenUnpinned; // valid if pinned
+	public static class pageFrame {
+		public VMProcess process; // valid if entry.valid
+		public TranslationEntry te = new TranslationEntry();
+		public int pinCount; // valid if te.valid
+		public boolean freeWhenUnpinned; // valid if pinned
 	}
 
 	// Make a swapFile class to make it easier to create a swapFile and access
@@ -188,15 +188,15 @@ public class VMKernel extends UserKernel {
 			// if there is a failure here you might want to exit
 
 			//We might want to evict a page from coreMap here
-			
-			PageTableIDs.push(spn);
+			 
+			pageTableIDs.push(spn);
 		}
 		
-		public extractPageFromFile( int vpn )
-		{
+	    public void extractPageFromFile( int vpn )
+	    {
 			
 			
-		}
+	    }
 	}
 
 	public SwapFile swap = null;

@@ -67,12 +67,16 @@ public class VMProcess extends UserProcess {
 	private Integer findValidPPN( int vpn )
 	{
 		//try to find the translation entry for this vpn in physical memory
-		for( int i = 0; i < Machine.processor().getNumPhysPages(); i++ )
-			if( coreMap[i].vpn == false ) return coreMap[i].ppn;
-		
+		for( int i = 0; i < Machine.processor().getNumPhysPages(); i++ ){
+			if(VMKernel.coreMap[i].te.vpn == vpn)
+				return VMKernel.coreMap[i].te.ppn;
+		}
+			//if(coreMap[i].vpn == false ) //don't quite understand why you wan to compare a vpn to a boolean
+			//	return coreMap[i].ppn;
+			
 		//if it isnt in physical memory you may have to find it in the swap file
 		
-		
+		return 0;//temporary until swapping is completed
 	}
 
 	void handleTLBMiss(int vaddr) {
@@ -84,12 +88,13 @@ public class VMProcess extends UserProcess {
 		
 		TranslationEntry entry = null;
 		//try to find an open TLB entry
-		for( int i = 0; i < Processor.getTLBEntry(); i++ )
+		int tlbSize = Machine.processor().getTLBSize();
+		for( int i = 0; i < tlbSize; i++ )
 		{
-			TranslationEntry TLBEntry = Processor.readTLBEntry(i)
+			TranslationEntry TLBEntry = Machine.processor().readTLBEntry(i);
 			if( TLBEntry == null ) entry = TLBEntry;
 		}
-		
+	/*	
 		//if the there is no free tlb then remove a random tlb entry
 		//This might be bad cause the valid bit might make a difference here
 		//if valid is false can we still evict it from tlb?
@@ -98,6 +103,12 @@ public class VMProcess extends UserProcess {
 				Random rand = new Random( Processor.getTLBEntry() ); //might need a change
 				entry = Processor.TLBEntry(rand);
 	    }
+		*/
+		
+		if(entry != null)
+		{
+			Machine.processor().writeTLBEntry(VMKernel.replacementPolicy(), entry);
+		}
 		
 		//create new TranslationEntry using ppn
 		//TLBEntry = translationentry from above
