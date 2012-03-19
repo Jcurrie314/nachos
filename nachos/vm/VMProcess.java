@@ -62,10 +62,11 @@ public class VMProcess extends UserProcess {
 				//set pageTable bits
 				//get First VPN
 				int vpn = section.getFirstVPN + j;
-				pageTable[firstVPN].used = false;
-				pageTable[firstVPN].dirty = false;
-				pageTable[firstVPN].valid = false;
-				pageTable[firstVPN].readyOnly = section.readOnly;
+				pageTable[vpn].used = false;
+				pageTable[vpn].dirty = false;
+				pageTable[vpn].valid = false;
+				pageTable[vpn].readyOnly = section.readOnly;
+				pageTable[vpn].vpn = j;
 			}
 		}
 		return super.loadSections();
