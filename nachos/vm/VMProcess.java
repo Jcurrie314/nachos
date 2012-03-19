@@ -61,11 +61,11 @@ public class VMProcess extends UserProcess {
 			for(int j=0; j < section.getLength(); j++){
 				//set pageTable bits
 				//get First VPN
-				int vpn = section.getFirstVPN + j;
+				int vpn = section.getFirstVPN() + j;
 				pageTable[vpn].used = false;
 				pageTable[vpn].dirty = false;
 				pageTable[vpn].valid = false;
-				pageTable[vpn].readyOnly = section.readOnly;
+				pageTable[vpn].readOnly = section.isReadOnly();
 				pageTable[vpn].vpn = j;
 			}
 		}
