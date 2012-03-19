@@ -80,8 +80,15 @@ public class VMKernel extends UserKernel {
 
 	/* Translate a vpn to a ppn */
 	public static int translatePage(VMProcess process, int vpn) {
-		Lib.assertTrue(memoryLock.isHeldByCurrentThread());
+		//Lib.assertTrue(memoryLock.isHeldByCurrentThread());
 
+		
+		
+		
+		
+		
+		
+		
 		// find PageFrame that matches process and vpn
 		// if found, return ppn
 		// else, fetch page
@@ -139,10 +146,15 @@ public class VMKernel extends UserKernel {
 
 	// Make a swapFile class to make it easier to create a swapFile and access
 	// it
+	/*
+	 * Need to add a container that will store elements like an array but doesn't
+	 * need to work like a linked list
+	 */
 	private class SwapFile {
 		private OpenFile swapf = null;
-		private LinkedList<Integer> PageTableIDs = new LinkedList<Integer>();
+		private LinkedList<Integer> pageTableIDs = new LinkedList<Integer>();
 		private LinkedList<Integer> unusedFileSpace = new LinkedList<Integer>();
+		private LinkedList<Integer> fileSpace = new LinkedList<Integer>();
 
 		public SwapFile(String filename) {
 			swapf = ThreadedKernel.fileSystem.open(filename, true);
@@ -155,17 +167,40 @@ public class VMKernel extends UserKernel {
 		public void insertPageIntoFile(int ppn) {
 			int spn = 0;
 			if (unusedFileSpace != null)
-				spn = unusedFileSpace.pop();
-			else
-				spn = PageTableIDs.getLast() + 1;
+				spn = unusedFileSpace.pop(); 
+			else spn = fileSpace.getLast() + 1;
+			
 			int ps = Machine.processor().pageSize;
-			swapf.write(spn * ps, mainMemory, ppn * ps, ps);
+			
+			//write into file swapf starting at position swapFileNumber * pageSize
+			//write from buffer mainMemory starting at position physicalPageNumber * PageSize
+			int numBits = swapf.write(spn * ps, mainMemory, ppn * ps, ps);
+			
+			//make sure there was no error writing memory to the file and that the ammount of 
+			//bits told to write in were written in
+			Lib.assertTrue( numBits != -1 || numBits == ppn * ps );
+			
+			//save the physical page number in a list of fileSpaces
+
+			
+			
+			
 			// if there is a failure here you might want to exit
 
+			//We might want to evict a page from coreMap here
+			
 			PageTableIDs.push(spn);
+		}
+		
+		public extractPageFromFile( int vpn )
+		{
+			
+			
 		}
 	}
 
+	public SwapFile swap = null;
+	
 	// dummy variables to make javac smarter
 	private static VMProcess dummy1 = null;
 	protected static byte[] mainMemory = Machine.processor().getMemory();

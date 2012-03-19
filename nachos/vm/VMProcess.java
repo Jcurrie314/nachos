@@ -43,6 +43,7 @@ public class VMProcess extends UserProcess {
 	 */
 	public void restoreState() {
 		// super.restoreState();
+		VMKernel.syncTLB(false);
 	}
 
 	/**
@@ -52,7 +53,8 @@ public class VMProcess extends UserProcess {
 	 * @return <tt>true</tt> if successful.
 	 */
 	protected boolean loadSections() {
-		return super.loadSections();
+		return true;
+		//return super.loadSections();
 	}
 
 	/**
@@ -61,10 +63,52 @@ public class VMProcess extends UserProcess {
 	protected void unloadSections() {
 		super.unloadSections();
 	}
+	
+	private Integer findValidPPN( int vpn )
+	{
+		//try to find the translation entry for this vpn in physical memory
+		for( int i = 0; i < Machine.processor().getNumPhysPages(); i++ )
+			if( coreMap[i].vpn == false ) return coreMap[i].ppn;
+		
+		//if it isnt in physical memory you may have to find it in the swap file
+		
+		
+	}
 
 	void handleTLBMiss(int vaddr) {
 		// need a kernel lock here
-
+		int vpn = Machine.processor().pageFromAddress(vaddr);
+		Lib.assertTrue( vpn >= 0 );
+		int ppn = findValidPPN( vpn ); //assume this function works for now
+		Lib.assertTrue( ppn != -1 );
+		
+		TranslationEntry entry = null;
+		//try to find an open TLB entry
+		for( int i = 0; i < Processor.getTLBEntry(); i++ )
+		{
+			TranslationEntry TLBEntry = Processor.readTLBEntry(i)
+			if( TLBEntry == null ) entry = TLBEntry;
+		}
+		
+		//if the there is no free tlb then remove a random tlb entry
+		//This might be bad cause the valid bit might make a difference here
+		//if valid is false can we still evict it from tlb?
+		if( entry != null ) 
+	    {
+				Random rand = new Random( Processor.getTLBEntry() ); //might need a change
+				entry = Processor.TLBEntry(rand);
+	    }
+		
+		//create new TranslationEntry using ppn
+		//TLBEntry = translationentry from above
+		//set TLBEntry's dirty/used to false
+		
+		//write this new random entry into the tlb
+		
+		//BEFORE WE JUST WRITE A NEW TLB ENTRY WE MAY NEED TO STORE THE OLD TLB ENTRY INTO MEMORY
+		//WILL MAYBE NEED TO ASK DORIAN THIS
+		
+		
 		// need a kernel release here
 		
 		/*hints from Dorian
@@ -102,8 +146,7 @@ public class VMProcess extends UserProcess {
 		switch (cause) {
 		case Processor.exceptionTLBMiss:
 
-			handleTLBMiss(Machine.processor().readRegister(
-					Processor.regBadVAddr));
+			handleTLBMiss(Machine.processor().readRegister(Processor.regBadVAddr));
 
 			// todo:
 			// if it wasn't in swap file, then load it
