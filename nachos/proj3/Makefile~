@@ -1,0 +1,3 @@
+DIRS = vm threads machine security ag
+
+include ../Makefile
