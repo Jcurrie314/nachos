@@ -127,17 +127,13 @@ public class VMProcess extends UserProcess {
 				}
 		}
 		
-		//if the there is no free tlb then remove a random tlb entry
-		//This might be bad cause the valid bit might make a difference here
-		//if valid is false can we still evict it from tlb?
+		coreMap[ppn].te.dirty = false;
+		coreMap[ppn].te.used = false;
 				
-		if( entry != null)
-			Machine.processor().writeTLBEntry(VMKernel.replacementPolicy(), entry);
-			
-		entry.dirty = false;
-		entry.used = false;
-				
-		else Machine.processor().writeTLBEntry( TLBIndex, entry );
+		if( entry != null)	
+			Machine.processor().writeTLBEntry(VMKernel.replacementPolicy(), coreMap[ppn].te);
+					
+		else Machine.processor().writeTLBEntry( TLBIndex, coreMap[ppn].te );
 		
 		//write this new random entry into the tlb
 		
