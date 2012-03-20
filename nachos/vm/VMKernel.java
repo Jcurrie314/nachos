@@ -299,8 +299,8 @@ public class VMKernel extends UserKernel {
 			// space and use that number +1, then put that number in the used
 			// list
 			else {
-				spn = usedFileSpace.getLast() + 1;
-				usedFileSpace.addLast(spn);
+				//spn = usedFileSpace.getLast() + 1;
+			//	usedFileSpace.addLast(spn);
 			}
 
 			int ps = Machine.processor().pageSize;
@@ -329,7 +329,7 @@ public class VMKernel extends UserKernel {
 		// This Function is not nearly done
 		public void extractPageFromFile(int vpn) {
 
-			usedFileSpace.addLast(vpn);
+			//usedFileSpace.addLast(vpn);
 		}
 	}
 

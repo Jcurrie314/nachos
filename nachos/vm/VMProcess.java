@@ -69,6 +69,16 @@ public class VMProcess extends UserProcess {
 				pageTable[vpn].vpn = j;
 			}
 		}
+		
+		for( int vpn = numPages - ( stackPages + 1 ); vpn < numPages; vpn++ )
+		{
+			pageTable[vpn].valid = false;
+			pageTable[vpn].readOnly = false;
+			pageTable[vpn].dirty = false;
+			pageTable[vpn].vpn = -1;
+		}
+		
+		
 		return super.loadSections();
 	}
 
@@ -114,17 +124,15 @@ public class VMProcess extends UserProcess {
 		// if dirty bit in page table entry is false it must be in coff file
 		// if in coff we need to allocate page and load it from coff
 		// if it isnt in coff file it must be in swap file
-		if(ppn == -1)//not in coreMap so it must be in coff file or swap file
+		if(ppn == -1)
 		{
-			handlePageFault( pageTable[vpn].dirty, vpn );
+			//not in coreMap so it must be in coff file or swap file
 			if( pageTable[vpn].dirty == false )
-			{
-				//parse coff for the information
-				handlePageFault( this, vpn );
-			}
+				VMKernel.handlePageFault( coff, pageTable[vpn], pageTable[vpn].dirty, vpn );
+				
 			//parse the swap file for the information
 			else if(pageTable[vpn].dirty == true)
-			{}
+				VMKernel.handlePageFault( null, pageTable[vpn], pageTable[vpn].dirty, vpn );
 		}
 
 		TranslationEntry entry = null;
