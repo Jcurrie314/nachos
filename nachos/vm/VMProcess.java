@@ -42,6 +42,9 @@ public class VMProcess extends UserProcess {
 	public void restoreState() {
 	}
 
+	
+	
+	
 	/**
 	 * Initializes page tables for this process so that the executable can be
 	 * demand-paged.
@@ -75,7 +78,50 @@ public class VMProcess extends UserProcess {
 	protected void unloadSections() {
 		super.unloadSections();
 	}
+	public void handlePageFault( TranslationEntry[] ptable, boolean dirty, int vpn )
+	{
+		//if the dirty bit is false we want to read from the coff file and put its information into
+		//mainMemory
+		if( dirty == false )
+		{	
+			pageFrame pageToEvict = VMKernel.pageToEvict();
+			Integer numBits = read( pageTable[vpn].vpn * pageSize, mainMemory, pageToEvict.ppn * pageSize, pageSize );
+			Lib.assertTrue( numBits == pageSize );
+		}
+		
+		//if the diry bit is true we want to read from the swap file and put its information into 
+		//mainMemory
+		else if( dirty == true )
+		{
+			pageFrame pageToEvict = VMKernel.pageToEvict();
+			Integer numBits = read( , mainMemory, pageToEvict.ppn * pageSize, pageSize );
+			Lib.assertTrue( numBits == pageSize );
+		}
+		//access coff file and get
+		
+		/*The coff file has 8 pages which mean the vpn is a number between 0 and 7.
+		 * This handlePageFault() function was called because the page requested was not
+		 * found anywhere.  (the information drawn from here will either be saved
+		 * in the core memory or the swap, depending what the circumstances were when
+		 * this page fault happened)
+		 * 
+		 * The purpose of this function is to use the specified vpn
+		 * to draw out the information from the correct section of the the COFF 
+		 */
+		
 
+//		for (int i = 0; i < coff.getNumSections(); i++) {
+//			CoffSection section = coff.getSection(i);
+//			for (int j = 0; j < section.getLength(); j++) {
+//				// set pageTable bits
+//				// get First VPN
+//				int vpn = section.getFirstVPN() + j;
+//				//write data into core memory
+//			}
+//		}
+		
+		
+	}
 	private void handleTLBMiss(int vaddr) {
 		VMKernel.memoryLock.acquire();
 		int vpn = Processor.pageFromAddress(vaddr);
@@ -86,7 +132,18 @@ public class VMProcess extends UserProcess {
 		// if dirty bit in page table entry is false it must be in coff file
 		// if in coff we need to allocate page and load it from coff
 		// if it isnt in coff file it must be in swap file
-		Lib.assertTrue(ppn != -1);
+		if(ppn == -1)//not in coreMap so it must be in coff file or swap file
+		{
+			handlePageFault( pageTable[vpn].dirty, vpn );
+			if( pageTable[vpn].dirty == false )
+			{
+				//parse coff for the information
+				handlePageFault( this, vpn );
+			}
+			//parse the swap file for the information
+			else if(pageTable[vpn].dirty == true)
+			{}
+		}
 
 		TranslationEntry entry = null;
 		Integer TLBIndex = 0;
@@ -97,6 +154,7 @@ public class VMProcess extends UserProcess {
 			if (TLBEntry.valid == false) {
 				TLBIndex = i;
 				entry = TLBEntry;
+				break;
 			}
 		}
 

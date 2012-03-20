@@ -78,7 +78,7 @@ public class VMKernel extends UserKernel {
 
 	// clock to find page to evict from phys memory
 	// return the page to evict
-	private pageFrame pageToEvict() {
+	public pageFrame pageToEvict() {
 		memoryLock.acquire();
 		Integer numPinned = 0;
 		Integer coreSize = Machine.processor().getNumPhysPages();
@@ -142,6 +142,14 @@ public class VMKernel extends UserKernel {
 		memoryLock.release();
 		return page;
 	}
+	
+//	public static void handlePageFault( VMProcess process, int vpn )
+//	{
+//		//access coff file and get
+//		//process.
+//		
+//		
+//	}
 
 	/*
 	 * return a Translation entry from the core map based on the ppn
@@ -149,26 +157,56 @@ public class VMKernel extends UserKernel {
 	public static TranslationEntry getTranslation(int ppn) {
 		return coreMap[ppn].te;
 	}
+	
+	public void handlePageFault( TranslationEntry pageTableEntry, boolean dirty, int vpn )
+	{
+		Integer pageSize = Processor.pageSize;
+		//if the dirty bit is false we want to read from the coff file and put its information into
+		//mainMemory
+		if( dirty == false )
+		{	
+			pageFrame pageToEvict = pageToEvict();
+			Integer numBits = read( pageTableEntry.vpn * pageSize, mainMemory, pageToEvict.ppn * pageSize, pageSize );
+			Lib.assertTrue( numBits == pageSize );
+		}
+		
+		//if the diry bit is true we want to read from the swap file and put its information into 
+		//mainMemory
+		else if( dirty == true )
+		{
+			pageFrame pageToEvict = VMKernel.pageToEvict();
+			Integer numBits = read( , mainMemory, pageToEvict.ppn * pageSize, pageSize );
+			Lib.assertTrue( numBits == pageSize );
+		}
+	}
 
 	/* Translate a vpn to a ppn */
 	public static int translatePage(VMProcess process, int vpn) {
 		Lib.assertTrue(memoryLock.isHeldByCurrentThread());
+		Integer ppn = -1;
 		// try to find the translation entry for this vpn in physical memory
 		for (int i = 0; i < Machine.processor().getNumPhysPages(); i++) {
-			if (coreMap[i].te.vpn == vpn && coreMap[i].process == process )
+			if ( coreMap[i].te.vpn == vpn && coreMap[i].process == process )
 				return coreMap[i].te.ppn;
 		}
 		
+//		handlePageFault();
+//		for( int i = 0; i <  Machine.processor().getTLBSize(); i++ )
+//		{
+//			TranslationEntry TLBEntry = Machine.processor().readTLBEntry(i);
+//			if( TLBEntry.vpn == vpn ) return TLBEntry.ppn;
+//		}
+		
+		
 		//if the page doesnt exist in physical memory then its either in the coff file or its
 		// in the swap file, so we would have a page fault here then
-		
 		
 		// if it isnt in physical memory you may have to find it in the swap
 		// file
 		// or coff file
 
 		// JUST RETURN -1 FOR NOW IF ENTRY ISNT IN MEMORY
-		return -1;
+		return ppn;
 
 		// find PageFrame that matches process and vpn
 		// if found, return ppn
