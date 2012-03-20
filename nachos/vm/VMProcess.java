@@ -127,12 +127,12 @@ public class VMProcess extends UserProcess {
 		if(ppn == -1)
 		{
 			//not in coreMap so it must be in coff file or swap file
-			if( pageTable[vpn].dirty == false )
-				VMKernel.handlePageFault( coff, pageTable[vpn], pageTable[vpn].dirty, vpn );
+		//	if( pageTable[vpn].dirty == false )
+		//		VMKernel.handlePageFault( coff, pageTable[vpn], pageTable[vpn].dirty, vpn );
 				
 			//parse the swap file for the information
-			else if(pageTable[vpn].dirty == true)
-				VMKernel.handlePageFault( null, pageTable[vpn], pageTable[vpn].dirty, vpn );
+		//	else if(pageTable[vpn].dirty == true)
+		//		VMKernel.handlePageFault( null, pageTable[vpn], pageTable[vpn].dirty, vpn );
 		}
 
 		TranslationEntry entry = null;

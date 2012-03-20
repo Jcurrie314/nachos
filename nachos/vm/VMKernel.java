@@ -166,9 +166,10 @@ public class VMKernel extends UserKernel {
 		if( dirty == false )
 		{	
 			pageFrame pageToEvict = pageToEvict();
-			Integer numBits = coff.read( pageTableEntry.vpn * pageSize, mainMemory, 
-						pageToEvict.te.ppn * pageSize, pageSize );
-			Lib.assertTrue( numBits == pageSize );
+//			Integer numBits = coff.read( pageTableEntry.vpn * pageSize, mainMemory, 
+//						pageToEvict.te.ppn * pageSize, pageSize );
+		//	CoffSection s= coff
+		//	Lib.assertTrue( numBits == pageSize );
 		}
 		
 		//if the diry bit is true we want to read from the swap file and put its information into 
