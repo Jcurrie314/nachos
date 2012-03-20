@@ -137,7 +137,7 @@ public class VMKernel extends UserKernel {
 			}
 		}
 
-		Integer spn = swap.insertPageIntoFile(page.te.ppn);
+		swap.insertPageIntoFile(page.te.ppn);
 
 		memoryLock.release();
 		return page;
@@ -155,10 +155,14 @@ public class VMKernel extends UserKernel {
 		Lib.assertTrue(memoryLock.isHeldByCurrentThread());
 		// try to find the translation entry for this vpn in physical memory
 		for (int i = 0; i < Machine.processor().getNumPhysPages(); i++) {
-			if (coreMap[i].te.vpn == vpn)
+			if (coreMap[i].te.vpn == vpn && coreMap[i].process == process )
 				return coreMap[i].te.ppn;
 		}
-
+		
+		//if the page doesnt exist in physical memory then its either in the coff file or its
+		// in the swap file, so we would have a page fault here then
+		
+		
 		// if it isnt in physical memory you may have to find it in the swap
 		// file
 		// or coff file
