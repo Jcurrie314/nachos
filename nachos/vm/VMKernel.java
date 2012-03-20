@@ -137,7 +137,7 @@ public class VMKernel extends UserKernel {
 			}
 		}
 
-		swap.insertPageIntoFile(page.te.ppn);
+		page.te.vpn = swap.insertPageIntoFile(page.te.ppn);
 
 		memoryLock.release();
 		return page;
@@ -158,7 +158,7 @@ public class VMKernel extends UserKernel {
 		return coreMap[ppn].te;
 	}
 	
-	public void handlePageFault( TranslationEntry pageTableEntry, boolean dirty, int vpn )
+	public void handlePageFault( OpenFile coff, TranslationEntry pageTableEntry, boolean dirty, int vpn )
 	{
 		Integer pageSize = Processor.pageSize;
 		//if the dirty bit is false we want to read from the coff file and put its information into
@@ -166,7 +166,8 @@ public class VMKernel extends UserKernel {
 		if( dirty == false )
 		{	
 			pageFrame pageToEvict = pageToEvict();
-			Integer numBits = read( pageTableEntry.vpn * pageSize, mainMemory, pageToEvict.ppn * pageSize, pageSize );
+			Integer numBits = coff.read( pageTableEntry.vpn * pageSize, mainMemory, 
+						pageToEvict.te.ppn * pageSize, pageSize );
 			Lib.assertTrue( numBits == pageSize );
 		}
 		
@@ -174,8 +175,9 @@ public class VMKernel extends UserKernel {
 		//mainMemory
 		else if( dirty == true )
 		{
-			pageFrame pageToEvict = VMKernel.pageToEvict();
-			Integer numBits = read( , mainMemory, pageToEvict.ppn * pageSize, pageSize );
+			pageFrame pageToEvict = pageToEvict();
+			Integer numBits = swap.swapf.read( vpn * pageSize, mainMemory, 
+					pageToEvict.te.ppn * pageSize, pageSize );
 			Lib.assertTrue( numBits == pageSize );
 		}
 	}
@@ -269,7 +271,7 @@ public class VMKernel extends UserKernel {
 		private OpenFile swapf = null;
 		// private LinkedList<Integer> pageTableIDs = new LinkedList<Integer>();
 		private LinkedList<Integer> unusedFileSpace = new LinkedList<Integer>();
-		private LinkedList<Integer> usedFileSpace = new LinkedList<Integer>();
+		//private LinkedList<Integer> usedFileSpace = new LinkedList<Integer>();
 
 		public SwapFile(String filename) {
 			swapf = ThreadedKernel.fileSystem.open(filename, true);
@@ -284,12 +286,12 @@ public class VMKernel extends UserKernel {
 			int spn = 0;
 
 			// if first element to placed in swap file add 0 to usedFilespace
-			if (unusedFileSpace == null && usedFileSpace == null)
-				usedFileSpace.addLast(spn);
+			//if (unusedFileSpace == null && usedFileSpace == null)
+				//usedFileSpace.addLast(spn);
 
 			// if there is anything in unusedFileSpace we want that to be our
 			// spn
-			else if (unusedFileSpace != null)
+			if (unusedFileSpace != null)
 				spn = unusedFileSpace.pop();
 
 			// if unusedFilespace is empty we want the last element of the used

@@ -78,25 +78,7 @@ public class VMProcess extends UserProcess {
 	protected void unloadSections() {
 		super.unloadSections();
 	}
-	public void handlePageFault( TranslationEntry[] ptable, boolean dirty, int vpn )
-	{
-		//if the dirty bit is false we want to read from the coff file and put its information into
-		//mainMemory
-		if( dirty == false )
-		{	
-			pageFrame pageToEvict = VMKernel.pageToEvict();
-			Integer numBits = read( pageTable[vpn].vpn * pageSize, mainMemory, pageToEvict.ppn * pageSize, pageSize );
-			Lib.assertTrue( numBits == pageSize );
-		}
-		
-		//if the diry bit is true we want to read from the swap file and put its information into 
-		//mainMemory
-		else if( dirty == true )
-		{
-			pageFrame pageToEvict = VMKernel.pageToEvict();
-			Integer numBits = read( , mainMemory, pageToEvict.ppn * pageSize, pageSize );
-			Lib.assertTrue( numBits == pageSize );
-		}
+
 		//access coff file and get
 		
 		/*The coff file has 8 pages which mean the vpn is a number between 0 and 7.
@@ -121,7 +103,7 @@ public class VMProcess extends UserProcess {
 //		}
 		
 		
-	}
+//	}
 	private void handleTLBMiss(int vaddr) {
 		VMKernel.memoryLock.acquire();
 		int vpn = Processor.pageFromAddress(vaddr);
